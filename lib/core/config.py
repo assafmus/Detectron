@@ -111,6 +111,12 @@ __C.TRAIN.BG_THRESH_LO = 0.0
 # Use horizontally-flipped images during training?
 __C.TRAIN.USE_FLIPPED = True
 
+# Use randomly cropped images during training?
+__C.TRAIN.USE_CROPPED = False
+__C.TRAIN.RANDOM_CROP_SIZE = ()
+__C.TRAIN.RANDOM_CROP_NUMBER = 10
+__C.TRAIN.RANDOM_CROP_TRUNCATE_TH = 0.2
+
 # Overlap required between an RoI and a ground-truth box in order for that
 # (RoI, gt box) pair to be used as a bounding-box regression training example
 __C.TRAIN.BBOX_THRESH = 0.5

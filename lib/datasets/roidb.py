@@ -23,6 +23,7 @@ from __future__ import unicode_literals
 from past.builtins import basestring
 import logging
 import numpy as np
+from tqdm import tqdm
 
 from core.config import cfg
 from datasets.json_dataset import JsonDataset
@@ -48,6 +49,10 @@ def combined_roidb_for_training(dataset_names, proposal_files):
         if cfg.TRAIN.USE_FLIPPED:
             logger.info('Appending horizontally-flipped training examples...')
             extend_with_flipped_entries(roidb, ds)
+        if cfg.TRAIN.USE_CROPPED:
+            logger.info('Appending randomly cropped training examples...')
+            extend_with_random_crop(roidb, ds, cfg.TRAIN.RANDOM_CROP_SIZE, cfg.TRAIN.RANDOM_CROP_NUMBER,
+                                    cfg.TRAIN.RANDOM_CROP_TRUNCATE_TH)
         logger.info('Loaded dataset: {:s}'.format(ds.name))
         return roidb
 
@@ -71,6 +76,88 @@ def combined_roidb_for_training(dataset_names, proposal_files):
     _compute_and_log_stats(roidb)
 
     return roidb
+
+
+def extend_with_random_crop(roidb, dataset, crop_size, repeat_num, trunc_threshold):
+    """Flip each entry in the given roidb and return a new roidb that is the
+    concatenation of the original roidb and the flipped entries.
+
+    "Flipping" an entry means that that image and associated metadata (e.g.,
+    ground truth boxes and object proposals) are horizontally flipped.
+    """
+    cropped_roidb = []
+    failed = 0
+    total = 0
+    for entry in tqdm(roidb):
+        count = 0
+        retries = 0
+        while count < repeat_num:
+            crop_rect = [np.random.randint(entry['width'] - crop_size[0]),
+                         np.random.randint(entry['height'] - crop_size[1]),
+                         crop_size[0], crop_size[1]]
+
+            boxes = entry['boxes'].copy()
+            boxes_area0 = np.prod(boxes[:, 2:] - boxes[:, :2], 1)
+
+            # Crop
+            boxes[:, 0] = boxes[:, 0] - crop_rect[0]
+            boxes[:, 1] = boxes[:, 1] - crop_rect[1]
+            boxes[:, 2] = boxes[:, 2] - crop_rect[0]
+            boxes[:, 3] = boxes[:, 3] - crop_rect[1]
+
+            # Trim
+            boxes[:, 0] = np.minimum(np.maximum(boxes[:, 0], 0), crop_size[0]-1)
+            boxes[:, 1] = np.minimum(np.maximum(boxes[:, 1], 0), crop_size[1]-1)
+            boxes[:, 2] = np.minimum(np.maximum(boxes[:, 2], 0), crop_size[0]-1)
+            boxes[:, 3] = np.minimum(np.maximum(boxes[:, 3], 0), crop_size[1]-1)
+
+            boxes_area = np.prod(boxes[:, 2:] - boxes[:, :2], 1)
+            if np.all(boxes_area != boxes_area0) and retries < 50:
+                retries += 1
+                continue
+
+            total += 1
+            failed += retries >= 50
+
+            retries = 0
+            cropped_entry = {}
+            dont_copy = ('boxes', 'width', 'height', )
+            for k, v in entry.items():
+                if k not in dont_copy:
+                    cropped_entry[k] = v
+            cropped_entry['boxes'] = boxes
+            cropped_entry['width'] = crop_size[0]
+            cropped_entry['height'] = crop_size[1]
+
+            if any([segm != [] for segm in entry['segms']]):
+                raise NotImplementedError()
+            if dataset.keypoints is not None:
+                raise NotImplementedError()
+
+            # Remove very truncated
+            v = boxes_area / boxes_area0 > trunc_threshold
+            cropped_entry['boxes'] = cropped_entry['boxes'][v, :]
+            cropped_entry['segms'] = [x for x, good in zip(cropped_entry['segms'], v) if good]
+            cropped_entry['seg_areas'] = cropped_entry['seg_areas'][v]
+            cropped_entry['max_classes'] = cropped_entry['max_classes'][v]
+            cropped_entry['max_overlaps'] = cropped_entry['max_overlaps'][v]
+            cropped_entry['gt_classes'] = cropped_entry['gt_classes'][v]
+            cropped_entry['box_to_gt_ind_map'] = cropped_entry['box_to_gt_ind_map'][v]
+            cropped_entry['gt_overlaps'] = cropped_entry['gt_overlaps'][v]
+            cropped_entry['is_crowd'] = cropped_entry['is_crowd'][v]
+
+            # cropped_entry['segms'] = segm_utils.flip_segms(
+            #     entry['segms'], entry['height'], entry['width']
+            # )
+            # cropped_entry['gt_keypoints'] = keypoint_utils.flip_keypoints(
+            #     dataset.keypoints, dataset.keypoint_flip_map,
+            #     entry['gt_keypoints'], entry['width']
+            # )
+            cropped_entry['crop_rect'] = crop_rect
+            cropped_roidb.append(cropped_entry)
+            count += 1
+
+    roidb.extend(cropped_roidb)
 
 
 def extend_with_flipped_entries(roidb, dataset):

@@ -101,6 +101,9 @@ def _get_image_blob(roidb):
         im = cv2.imread(roidb[i]['image'])
         if roidb[i]['flipped']:
             im = im[:, ::-1, :]
+        if 'crop_rect' in roidb[i]:
+            crop_rect = roidb[i]['crop_rect']
+            im = im[crop_rect[1]:crop_rect[1]+crop_rect[3], crop_rect[0]:crop_rect[0]+crop_rect[2]]
         target_size = cfg.TRAIN.SCALES[scale_inds[i]]
         im, im_scale = blob_utils.prep_im_for_blob(
             im, cfg.PIXEL_MEANS, [target_size], cfg.TRAIN.MAX_SIZE

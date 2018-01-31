@@ -46,13 +46,13 @@ def combined_roidb_for_training(dataset_names, proposal_files):
             proposal_file=proposal_file,
             crowd_filter_thresh=cfg.TRAIN.CROWD_FILTER_THRESH
         )
-        if cfg.TRAIN.USE_FLIPPED:
-            logger.info('Appending horizontally-flipped training examples...')
-            extend_with_flipped_entries(roidb, ds)
         if cfg.TRAIN.USE_CROPPED:
             logger.info('Appending randomly cropped training examples...')
             extend_with_random_crop(roidb, ds, cfg.TRAIN.RANDOM_CROP_SIZE, cfg.TRAIN.RANDOM_CROP_NUMBER,
                                     cfg.TRAIN.RANDOM_CROP_TRUNCATE_TH)
+        if cfg.TRAIN.USE_FLIPPED:
+            logger.info('Appending horizontally-flipped training examples...')
+            extend_with_flipped_entries(roidb, ds)
         logger.info('Loaded dataset: {:s}'.format(ds.name))
         return roidb
 

@@ -142,7 +142,9 @@ def extend_with_random_crop(roidb, dataset, crop_size, repeat_num, trunc_thresho
             cropped_entry['max_classes'] = cropped_entry['max_classes'][v]
             cropped_entry['max_overlaps'] = cropped_entry['max_overlaps'][v]
             cropped_entry['gt_classes'] = cropped_entry['gt_classes'][v]
+            inds = [i for i, good in zip(range(len(v)), v) if good]
             cropped_entry['box_to_gt_ind_map'] = cropped_entry['box_to_gt_ind_map'][v]
+            cropped_entry['box_to_gt_ind_map'] = np.asarray([inds.index(x) for x in cropped_entry['box_to_gt_ind_map']])
             cropped_entry['gt_overlaps'] = cropped_entry['gt_overlaps'][v]
             cropped_entry['is_crowd'] = cropped_entry['is_crowd'][v]
 

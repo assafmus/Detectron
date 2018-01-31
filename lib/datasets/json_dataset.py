@@ -54,19 +54,30 @@ class JsonDataset(object):
     """A class representing a COCO json dataset."""
 
     def __init__(self, name):
-        assert name in DATASETS.keys(), \
-            'Unknown dataset name: {}'.format(name)
-        assert os.path.exists(DATASETS[name][IM_DIR]), \
-            'Image directory \'{}\' not found'.format(DATASETS[name][IM_DIR])
-        assert os.path.exists(DATASETS[name][ANN_FN]), \
-            'Annotation file \'{}\' not found'.format(DATASETS[name][ANN_FN])
-        logger.debug('Creating: {}'.format(name))
-        self.name = name
-        self.image_directory = DATASETS[name][IM_DIR]
-        self.image_prefix = (
-            '' if IM_PREFIX not in DATASETS[name] else DATASETS[name][IM_PREFIX]
-        )
-        self.COCO = COCO(DATASETS[name][ANN_FN])
+        if isinstance(name, tuple):
+            logger.debug('Creating: {}'.format(name[0]))
+            self.name = name[0]
+            self.image_directory = name[1]
+            self.image_prefix = (
+                '' if len(name) < 4 else name[3]
+            )
+            self.COCO = COCO(name[2])
+
+        else:
+            assert name in DATASETS.keys(), \
+                'Unknown dataset name: {}'.format(name)
+            assert os.path.exists(DATASETS[name][IM_DIR]), \
+                'Image directory \'{}\' not found'.format(DATASETS[name][IM_DIR])
+            assert os.path.exists(DATASETS[name][ANN_FN]), \
+                'Annotation file \'{}\' not found'.format(DATASETS[name][ANN_FN])
+            logger.debug('Creating: {}'.format(name))
+            self.name = name
+            self.image_directory = DATASETS[name][IM_DIR]
+            self.image_prefix = (
+                '' if IM_PREFIX not in DATASETS[name] else DATASETS[name][IM_PREFIX]
+            )
+            self.COCO = COCO(DATASETS[name][ANN_FN])
+
         self.debug_timer = Timer()
         # Set up dataset classes
         category_ids = self.COCO.getCatIds()

@@ -219,7 +219,8 @@ def _get_retinanet_blobs(
         # Fg label: for each gt use anchors with highest overlap
         # (including ties)
         gt_inds = anchor_to_gt_argmax[anchors_with_max_overlap]
-        labels[anchors_with_max_overlap] = gt_classes[gt_inds]
+        if cfg.RETINANET.MATCH_BEST_OVERLAP:
+            labels[anchors_with_max_overlap] = gt_classes[gt_inds]
         # Fg label: above threshold IOU
         inds = anchor_to_gt_max >= cfg.RETINANET.POSITIVE_OVERLAP
         gt_inds = anchor_to_gt_argmax[inds]

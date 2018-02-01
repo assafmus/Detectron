@@ -187,7 +187,8 @@ def _get_rpn_blobs(im_height, im_width, foas, all_anchors, gt_boxes):
 
         # Fg label: for each gt use anchors with highest overlap
         # (including ties)
-        labels[anchors_with_max_overlap] = 1
+        if cfg.TRAIN.MATCH_BEST_OVERLAP:
+            labels[anchors_with_max_overlap] = 1
         # Fg label: above threshold IOU
         labels[anchor_to_gt_max >= cfg.TRAIN.RPN_POSITIVE_OVERLAP] = 1
 

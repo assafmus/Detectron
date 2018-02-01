@@ -70,6 +70,10 @@ cfg = __C
 # ---------------------------------------------------------------------------- #
 __C.TRAIN = AttrDict()
 
+# Enable/disable cudnn exhausing search
+# The detection code might use variable size inputs that might not play nicely with cudnn_exhaustive_search.
+cfg.TRAIN.CUDNN_EXHAUSTIVE_SEARCH = False
+
 # Initialize network with weights from this .pkl file
 __C.TRAIN.WEIGHTS = b''
 

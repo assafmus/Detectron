@@ -70,6 +70,10 @@ cfg = __C
 # ---------------------------------------------------------------------------- #
 __C.TRAIN = AttrDict()
 
+# Enable/disable cudnn exhausing search
+# The detection code might use variable size inputs that might not play nicely with cudnn_exhaustive_search.
+cfg.TRAIN.CUDNN_EXHAUSTIVE_SEARCH = False
+
 # Initialize network with weights from this .pkl file
 __C.TRAIN.WEIGHTS = b''
 
@@ -147,6 +151,9 @@ __C.TRAIN.ASPECT_GROUPING = True
 # (anchor, gt box) pair to be a positive example (IOU >= thresh ==> positive RPN
 # example)
 __C.TRAIN.RPN_POSITIVE_OVERLAP = 0.7
+
+# Match the best overlapping prior to ground truth first
+__C.TRAIN.MATCH_BEST_OVERLAP = True
 
 # Maximum overlap allowed between an anchor and ground-truth box for the
 # (anchor, gt box) pair to be a negative examples (IOU < thresh ==> negative RPN
@@ -525,6 +532,9 @@ __C.RETINANET.PRE_NMS_TOP_N = 1000
 # IoU overlap ratio for labeling an anchor as positive
 # Anchors with >= iou overlap are labeled positive
 __C.RETINANET.POSITIVE_OVERLAP = 0.5
+
+# Match the best overlapping prior to ground truth first
+__C.RETINANET.MATCH_BEST_OVERLAP = True
 
 # IoU overlap ratio for labeling an anchor as negative
 # Anchors with < iou overlap are labeled negative

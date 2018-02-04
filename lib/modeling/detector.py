@@ -54,7 +54,7 @@ class DetectionModelHelper(cnn.CNNModelHelper):
         # Defensively set cudnn_exhaustive_search to False in case the default
         # changes in CNNModelHelper. The detection code uses variable size
         # inputs that might not play nicely with cudnn_exhaustive_search.
-        kwargs['cudnn_exhaustive_search'] = False
+        kwargs['cudnn_exhaustive_search'] = cfg.TRAIN.CUDNN_EXHAUSTIVE_SEARCH if self.train else False
         super(DetectionModelHelper, self).__init__(**kwargs)
         self.roi_data_loader = None
         self.losses = []

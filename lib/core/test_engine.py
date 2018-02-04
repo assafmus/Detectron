@@ -234,7 +234,7 @@ def get_roidb_and_dataset(ind_range):
     """Get the roidb for the dataset specified in the global cfg. Optionally
     restrict it to a range of indices if ind_range is a pair of integers.
     """
-    dataset = JsonDataset(cfg.TEST.DATASET)
+    dataset = JsonDataset(eval(cfg.TEST.DATASET))
     if cfg.TEST.PRECOMPUTED_PROPOSALS:
         roidb = dataset.get_roidb(
             proposal_file=cfg.TEST.PROPOSAL_FILE,

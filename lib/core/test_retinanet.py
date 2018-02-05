@@ -105,8 +105,13 @@ def im_detect_bbox(model, im, timers=None):
         cls_prob = cls_prob.reshape((
             cls_prob.shape[0], A, int(cls_prob.shape[1] / A),
             cls_prob.shape[2], cls_prob.shape[3]))
-        box_pred = box_pred.reshape((
-            box_pred.shape[0], A, 4, box_pred.shape[2], box_pred.shape[3]))
+
+        if cfg.RETINANET.CLASS_SPECIFIC_BBOX:
+            box_pred = box_pred.reshape((
+                box_pred.shape[0], A*(cfg.MODEL.NUM_CLASSES-1), 4, box_pred.shape[2], box_pred.shape[3]))
+        else:
+            box_pred = box_pred.reshape((
+                box_pred.shape[0], A, 4, box_pred.shape[2], box_pred.shape[3]))
         cnt += 1
 
         if cfg.RETINANET.SOFTMAX:
@@ -139,9 +144,9 @@ def im_detect_bbox(model, im, timers=None):
         if not cfg.RETINANET.CLASS_SPECIFIC_BBOX:
             box_deltas = box_pred[0, anchor_ids, :, y, x]
         else:
-            box_cls_inds = classes * 4
+            box_cls_inds = classes + (cfg.MODEL.NUM_CLASSES-1) * anchor_ids
             box_deltas = np.vstack(
-                [box_pred[0, ind:ind + 4, yi, xi]
+                [box_pred[0, ind, :, yi, xi]
                  for ind, yi, xi in zip(box_cls_inds, y, x)]
             )
         pred_boxes = (

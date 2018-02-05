@@ -30,9 +30,14 @@ from core.config import cfg
 # ---------------------------------------------------------------------------- #
 
 
+def add_ResNet50_conv4_body_half(model):
+    return add_ResNet_convX_body(model, (3, 4, 6), ratio=0.5)
+
+def add_ResNet50_conv4_body_quarter(model):
+    return add_ResNet_convX_body(model, (3, 4, 6), ratio=0.25)
+
 def add_ResNet50_conv4_body(model):
     return add_ResNet_convX_body(model, (3, 4, 6))
-
 
 def add_ResNet50_conv5_body(model):
     return add_ResNet_convX_body(model, (3, 4, 6, 3))
@@ -86,42 +91,42 @@ def add_stage(
     return blob_in, dim_in
 
 
-def add_ResNet_convX_body(model, block_counts, freeze_at=2):
+def add_ResNet_convX_body(model, block_counts, freeze_at=2, ratio=1.):
     """Add a ResNet body from input data up through the res5 (aka conv5) stage.
     The final res5/conv5 stage may be optionally excluded (hence convX, where
     X = 4 or 5)."""
     assert freeze_at in [0, 2, 3, 4, 5]
-    p = model.Conv('data', 'conv1', 3, 64, 7, pad=3, stride=2, no_bias=1)
-    p = model.AffineChannel(p, 'res_conv1_bn', dim=64, inplace=True)
+    p = model.Conv('data', 'conv1', 3, 64 * ratio, 7, pad=3, stride=2, no_bias=1)
+    p = model.AffineChannel(p, 'res_conv1_bn', dim=64 * ratio, inplace=True)
     p = model.Relu(p, p)
     p = model.MaxPool(p, 'pool1', kernel=3, pad=1, stride=2)
-    dim_in = 64
-    dim_bottleneck = cfg.RESNETS.NUM_GROUPS * cfg.RESNETS.WIDTH_PER_GROUP
+    dim_in = 64 * ratio
+    dim_bottleneck = cfg.RESNETS.NUM_GROUPS * cfg.RESNETS.WIDTH_PER_GROUP * ratio
     (n1, n2, n3) = block_counts[:3]
-    s, dim_in = add_stage(model, 'res2', p, n1, dim_in, 256, dim_bottleneck, 1)
+    s, dim_in = add_stage(model, 'res2', p, n1, dim_in, 256 * ratio, dim_bottleneck, 1)
     if freeze_at == 2:
         model.StopGradient(s, s)
     s, dim_in = add_stage(
-        model, 'res3', s, n2, dim_in, 512, dim_bottleneck * 2, 1
+        model, 'res3', s, n2, dim_in, 512 * ratio, dim_bottleneck * 2, 1
     )
     if freeze_at == 3:
         model.StopGradient(s, s)
     s, dim_in = add_stage(
-        model, 'res4', s, n3, dim_in, 1024, dim_bottleneck * 4, 1
+        model, 'res4', s, n3, dim_in, 1024 * ratio, dim_bottleneck * 4, 1
     )
     if freeze_at == 4:
         model.StopGradient(s, s)
     if len(block_counts) == 4:
         n4 = block_counts[3]
         s, dim_in = add_stage(
-            model, 'res5', s, n4, dim_in, 2048, dim_bottleneck * 8,
+            model, 'res5', s, n4, dim_in, 2048 * ratio, dim_bottleneck * 8,
             cfg.RESNETS.RES5_DILATION
         )
         if freeze_at == 5:
             model.StopGradient(s, s)
-        return s, dim_in, 1. / 32. * cfg.RESNETS.RES5_DILATION
+        return s, dim_in, 1. / 32. * cfg.RESNETS.RES5_DILATION * ratio
     else:
-        return s, dim_in, 1. / 16.
+        return s, dim_in, 1. / 16. * ratio  # ???
 
 
 def add_ResNet_roi_conv5_head(model, blob_in, dim_in, spatial_scale):

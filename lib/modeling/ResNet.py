@@ -96,30 +96,30 @@ def add_ResNet_convX_body(model, block_counts, freeze_at=2, ratio=1.):
     The final res5/conv5 stage may be optionally excluded (hence convX, where
     X = 4 or 5)."""
     assert freeze_at in [0, 2, 3, 4, 5]
-    p = model.Conv('data', 'conv1', 3, 64 * ratio, 7, pad=3, stride=2, no_bias=1)
-    p = model.AffineChannel(p, 'res_conv1_bn', dim=64 * ratio, inplace=True)
+    p = model.Conv('data', 'conv1', 3, int(64 * ratio), 7, pad=3, stride=2, no_bias=1)
+    p = model.AffineChannel(p, 'res_conv1_bn', dim=int(64 * ratio), inplace=True)
     p = model.Relu(p, p)
     p = model.MaxPool(p, 'pool1', kernel=3, pad=1, stride=2)
-    dim_in = 64 * ratio
-    dim_bottleneck = cfg.RESNETS.NUM_GROUPS * cfg.RESNETS.WIDTH_PER_GROUP * ratio
+    dim_in = int(64 * ratio)
+    dim_bottleneck = int(cfg.RESNETS.NUM_GROUPS * cfg.RESNETS.WIDTH_PER_GROUP * ratio)
     (n1, n2, n3) = block_counts[:3]
-    s, dim_in = add_stage(model, 'res2', p, n1, dim_in, 256 * ratio, dim_bottleneck, 1)
+    s, dim_in = add_stage(model, 'res2', p, n1, dim_in, int(256 * ratio), dim_bottleneck, 1)
     if freeze_at == 2:
         model.StopGradient(s, s)
     s, dim_in = add_stage(
-        model, 'res3', s, n2, dim_in, 512 * ratio, dim_bottleneck * 2, 1
+        model, 'res3', s, n2, dim_in, int(512 * ratio), dim_bottleneck * 2, 1
     )
     if freeze_at == 3:
         model.StopGradient(s, s)
     s, dim_in = add_stage(
-        model, 'res4', s, n3, dim_in, 1024 * ratio, dim_bottleneck * 4, 1
+        model, 'res4', s, n3, dim_in, int(1024 * ratio), dim_bottleneck * 4, 1
     )
     if freeze_at == 4:
         model.StopGradient(s, s)
     if len(block_counts) == 4:
         n4 = block_counts[3]
         s, dim_in = add_stage(
-            model, 'res5', s, n4, dim_in, 2048 * ratio, dim_bottleneck * 8,
+            model, 'res5', s, n4, dim_in, int(2048 * ratio), dim_bottleneck * 8,
             cfg.RESNETS.RES5_DILATION
         )
         if freeze_at == 5:

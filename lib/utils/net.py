@@ -46,6 +46,22 @@ def initialize_from_weights_file(model, weights_file, broadcast=True):
     if broadcast:
         broadcast_parameters(model)
 
+def modify_loaded_blob_to_model(src, target, name):
+    if src.shape == target.shape:
+        return src
+
+    logger.warning("Cutting loaded model layer %s from %s to %s", name, src.shape, target.shape)
+
+    for src_dim, target_dim in zip(src.shape, target.shape):
+        assert src_dim == target_dim or src_dim == 4 * target_dim or src_dim == 2 * target_dim, "making sure we are only using half or quarter ATM"
+
+    if len(src.shape) == 1:
+        src = src[:target.shape[0]]
+    else:
+        src = src[:target.shape[0], :target.shape[1], :target.shape[2], :target.shape[3]]
+    assert src.shape == target.shape, "{} - {}".format(src.shape, target.shape)
+
+    return src
 
 def initialize_gpu_from_weights_file(model, weights_file, gpu_id=0):
     """Initialize a network with ops on a specific GPU.
@@ -98,6 +114,7 @@ def initialize_gpu_from_weights_file(model, weights_file, gpu_id=0):
                 # If the blob is already in the workspace, make sure that it
                 # matches the shape of the loaded blob
                 ws_blob = workspace.FetchBlob(dst_name)
+                src_blobs[src_name] = modify_loaded_blob_to_model(src_blobs[src_name], ws_blob, src_name)
                 assert ws_blob.shape == src_blobs[src_name].shape, \
                     ('Workspace blob {} with shape {} does not match '
                      'weights file shape {}').format(

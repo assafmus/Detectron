@@ -50,7 +50,7 @@ logger = logging.getLogger(__name__)
 def test_net_on_dataset(multi_gpu=False):
     """Run inference on a dataset."""
     output_dir = get_output_dir(training=False)
-    dataset = JsonDataset(cfg.TEST.DATASET)
+    dataset = JsonDataset(cfg.TEST.DATASET if isinstance(cfg.TEST.DATASET, tuple) else eval(cfg.TEST.DATASET))
     test_timer = Timer()
     test_timer.tic()
     if multi_gpu:

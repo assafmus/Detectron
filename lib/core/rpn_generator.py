@@ -57,7 +57,7 @@ logger = logging.getLogger(__name__)
 def generate_rpn_on_dataset(multi_gpu=False):
     """Run inference on a dataset."""
     output_dir = get_output_dir(training=False)
-    dataset = JsonDataset(cfg.TEST.DATASET)
+    dataset = JsonDataset(cfg.TEST.DATASET if isinstance(cfg.TEST.DATASET, tuple) else eval(cfg.TEST.DATASET))
     test_timer = Timer()
     test_timer.tic()
     if multi_gpu:
@@ -229,7 +229,7 @@ def get_roidb(ind_range):
     """Get the roidb for the dataset specified in the global cfg. Optionally
     restrict it to a range of indices if ind_range is a pair of integers.
     """
-    dataset = JsonDataset(cfg.TEST.DATASET)
+    dataset = JsonDataset(cfg.TEST.DATASET if isinstance(cfg.TEST.DATASET, tuple) else eval(cfg.TEST.DATASET))
     roidb = dataset.get_roidb()
 
     if ind_range is not None:

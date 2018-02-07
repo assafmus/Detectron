@@ -903,7 +903,7 @@ def _get_image_blob(im):
             in the image pyramid
     """
     processed_ims, im_scale_factors = blob_utils.prep_im_for_blob(
-        im, cfg.PIXEL_MEANS, cfg.TEST.SCALES, cfg.TEST.MAX_SIZE
+        im, cfg.PIXEL_MEANS, cfg.TEST.SCALES, cfg.TEST.MAX_SIZE, cfg.TEST.GAMMAS
     )
     blob = blob_utils.im_list_to_blob(processed_ims)
     return blob, np.array(im_scale_factors)

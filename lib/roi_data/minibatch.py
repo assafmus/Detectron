@@ -95,6 +95,9 @@ def _get_image_blob(roidb):
     scale_inds = np.random.randint(
         0, high=len(cfg.TRAIN.SCALES), size=num_images
     )
+    gamma_inds = np.random.randint(
+        0, high=len(cfg.TRAIN.GAMMAS), size=num_images
+    )
     processed_ims = []
     im_scales = []
     for i in range(num_images):
@@ -105,8 +108,9 @@ def _get_image_blob(roidb):
             crop_rect = roidb[i]['crop_rect']
             im = im[crop_rect[1]:crop_rect[1]+crop_rect[3], crop_rect[0]:crop_rect[0]+crop_rect[2]]
         target_size = cfg.TRAIN.SCALES[scale_inds[i]]
+        gamma = cfg.TRAIN.GAMMAS[gamma_inds[i]]
         im, im_scale = blob_utils.prep_im_for_blob(
-            im, cfg.PIXEL_MEANS, [target_size], cfg.TRAIN.MAX_SIZE
+            im, cfg.PIXEL_MEANS, [target_size], cfg.TRAIN.MAX_SIZE, [gamma]
         )
         im_scales.append(im_scale[0])
         processed_ims.append(im[0])

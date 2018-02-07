@@ -91,6 +91,9 @@ __C.TRAIN.SCALES = (600, )
 # Max pixel size of the longest side of a scaled input image
 __C.TRAIN.MAX_SIZE = 1000
 
+# Gamma correction factors (1.0 = disabled)
+__C.TRAIN.GAMMAS = (1.0, )
+
 # Images *per GPU* in the training minibatch
 # Total images per minibatch = TRAIN.IMS_PER_BATCH * NUM_GPUS
 __C.TRAIN.IMS_PER_BATCH = 2
@@ -234,6 +237,9 @@ __C.TEST.SCALES = (600, )
 
 # Max pixel size of the longest side of a scaled input image
 __C.TEST.MAX_SIZE = 1000
+
+# Gamma correction factors (1.0 = disabled)
+__C.TEST.GAMMAS = (1.0, )
 
 # Overlap threshold used for non-maximum suppression (suppress boxes with
 # IoU >= this threshold)

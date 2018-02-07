@@ -48,7 +48,7 @@ def combined_roidb_for_training(dataset_names, proposal_files):
         )
         if cfg.TRAIN.USE_CROPPED:
             logger.info('Appending randomly cropped training examples...')
-            extend_with_random_crop(roidb, ds, cfg.TRAIN.RANDOM_CROP_SIZE, cfg.TRAIN.RANDOM_CROP_NUMBER,
+            roidb = extend_with_random_crop(roidb, ds, cfg.TRAIN.RANDOM_CROP_SIZE, cfg.TRAIN.RANDOM_CROP_NUMBER,
                                     cfg.TRAIN.RANDOM_CROP_TRUNCATE_TH)
         if cfg.TRAIN.USE_FLIPPED:
             logger.info('Appending horizontally-flipped training examples...')
@@ -78,19 +78,26 @@ def combined_roidb_for_training(dataset_names, proposal_files):
     return roidb
 
 
-def extend_with_random_crop(roidb, dataset, crop_size, repeat_num, trunc_threshold):
+def extend_with_random_crop(roidb, dataset, crop_sizes, repeat_num, trunc_threshold):
     """Flip each entry in the given roidb and return a new roidb that is the
     concatenation of the original roidb and the flipped entries.
 
     "Flipping" an entry means that that image and associated metadata (e.g.,
     ground truth boxes and object proposals) are horizontally flipped.
     """
+    if not isinstance(crop_sizes, tuple):
+        crop_sizes = (crop_sizes, crop_sizes)
+    if not isinstance(crop_sizes[0], tuple):
+        crop_sizes = (crop_sizes, )
+
     cropped_roidb = []
     failed = 0
     total = 0
     for entry in tqdm(roidb):
         count = 0
         retries = 0
+        crop_ind = np.random.randint(len(crop_sizes))
+        crop_size = crop_sizes[crop_ind]
         while count < repeat_num:
             crop_rect = [np.random.randint(entry['width'] - crop_size[0]),
                          np.random.randint(entry['height'] - crop_size[1]),
@@ -159,7 +166,7 @@ def extend_with_random_crop(roidb, dataset, crop_size, repeat_num, trunc_thresho
             cropped_roidb.append(cropped_entry)
             count += 1
 
-    roidb.extend(cropped_roidb)
+    return cropped_roidb
 
 
 def extend_with_flipped_entries(roidb, dataset):
